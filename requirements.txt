@@ -7,3 +7,4 @@ pydub==0.25.1
 pygame==2.6.0
 edge-tts
 groq==0.6.0
+beautifulsoup4==4.12.2
