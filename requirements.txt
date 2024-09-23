@@ -4,5 +4,5 @@ streamlit==1.28.0
 opencv-python==4.9.0.80
 google-generativeai==0.5.4
 pydub==0.25.1
-simpleaudio==1.0.4
+pygame
 edge-tts==1.0.5
