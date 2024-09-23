@@ -1,7 +1,5 @@
 import streamlit as st
 from pathlib import Path
-from faster_whisper import WhisperModel
-import speech_recognition as sr
 import cv2
 import time
 from Features.voice import say
@@ -41,19 +39,6 @@ sys_msg = (
 )
 
 convo = [{'role': 'system', 'content': sys_msg}]
-
-num_cores = os.cpu_count()
-whisper_size = 'base'
-Whisper_model = WhisperModel(
-    whisper_size, 
-    device='cpu',
-    compute_type='int8',
-    cpu_threads=num_cores //2,
-    num_workers=num_cores //2
-)
-
-r = sr.Recognizer()
-source = sr.Microphone()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -117,66 +102,10 @@ def function_call(prompt):
 
     return {"function": response, "parameters": {}}
 
-def wav_to_text(audio_path):
-    segments, _ = Whisper_model.transcribe(audio_path)
-    text = ''.join(segment.text for segment in segments)
-    print("Full Transcription:", text)  # Debugging
-    return text
-
-def extract_prompt(transcribed_text, wake_word):
-    pattern = rf'\b{re.escape(wake_word)}[\s,.?!]*(.*)'
-    match = re.search(pattern, transcribed_text, re.IGNORECASE)
-
-    if match:
-        prompt = match.group(1).strip()
-        return prompt
-    else:
-        return None
-
 def update_ui_with_voice_input(prompt, response):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})
 
-def callback(recognizer, audio):
-    prompt_audio_path = 'Backend/prompt.wav'
-    with open(prompt_audio_path, 'wb') as f:
-        f.write(audio.get_wav_data())
-
-    prompt_text = wav_to_text(prompt_audio_path)
-    clean_prompt = extract_prompt(prompt_text, wake_word)
-
-    if clean_prompt:
-        print(f'USER : {clean_prompt}')
-        call = function_call(clean_prompt)
-        
-        if call["function"] == "take screenshot":
-            print('Taking screenshot')
-            take_screenshot()
-            vision_context = vision_prompt(prompt=clean_prompt, photo_path='Images/backend/screenshot.jpg')
-        
-        elif call["function"] == "capture webcam":
-            print('Capturing webcam...')
-            web_cam_capture()
-            vision_context = vision_prompt(prompt=clean_prompt, photo_path='Images/backend/webcam.jpg')
-        
-        else:
-            vision_context = None
-            response = groq_prompt(prompt=clean_prompt, img_context=vision_context)
-        
-        print(f'optimus : {response}')
-        say(response) 
-        
-        # Update Streamlit UI
-        st.session_state.voice_input = (clean_prompt, response)
-
-def start_listening():
-    try:
-        with source as s:
-            r.adjust_for_ambient_noise(s, duration=2)
-        print('\nSay ', wake_word, 'followed with your prompt. \n')
-        r.listen_in_background(source, callback)
-    except Exception as e:
-        print(f"Error in start_listening: {str(e)}")
 
 def generate_image(prompt):
 
@@ -420,14 +349,14 @@ def streamlit_ui():
                             response = groq_prompt(prompt=prompt, img_context=vision_context)
                     
                     elif function_result["function"] == "capture webcam":
-                        st.write("Capturing from webcam...")
-                        image_path = web_cam_capture()
-                        if image_path.startswith("Error:"):
-                            st.error(image_path)
-                            response = f"I'm sorry, but I encountered an error while trying to capture from the camera: {image_path}"
+                        with st.spinner("Capturing from webcam..."):
+                            result = web_cam_capture()
+                        if result.startswith("Error:"):
+                            st.error(result)
+                            response = f"I'm sorry, but I encountered an error while trying to capture from the camera: {result}"
                         else:
                             st.success("Photo captured successfully!")
-                            vision_context = vision_prompt(prompt=prompt, photo_path=image_path)
+                            vision_context = vision_prompt(prompt=prompt, photo_path=result)
                             if vision_context.startswith("Error: No image file found"):
                                 response = "I'm sorry, but I couldn't find the captured image. Let me answer your question without visual context."
                                 response += groq_prompt(prompt=prompt)
@@ -438,7 +367,7 @@ def streamlit_ui():
                                 response = groq_prompt(prompt=prompt, img_context=vision_context)
 
                     elif function_result["function"] == "generate_image":
-                        result = generate_image(prompt)
+                        result = generate_image_dev(prompt)
 
                         if result.startswith("Error:"):
                             st.error(result)
@@ -446,9 +375,7 @@ def streamlit_ui():
                         else:
                             try:
                                 st.image(result, caption="Generated Image", use_column_width=True)
-                                st.write("Voilà ✨ Your AI-crafted masterpiece is ready!")
-                                response = ''
-
+                                response = "Image generated successfully."
                             except Exception as e:
                                 st.error(f"Error displaying the image: {e}")
                                 response = f"Error displaying the image: {e}"
@@ -478,8 +405,7 @@ def streamlit_ui():
                     st.session_state.messages.append({"role": "assistant", "content": response})
 
 def main():
-    threading.Thread(target=start_listening, daemon=True).start()
-    
+
     # Run the Streamlit UI
     streamlit_ui()
 
