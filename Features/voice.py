@@ -3,7 +3,7 @@ import edge_tts
 from pydub import AudioSegment
 import tempfile
 import os
-import simpleaudio as sa
+import pygame
 
 async def say_async(text, voice="en-US-GuyNeural"):
     """
@@ -24,17 +24,18 @@ async def say_async(text, voice="en-US-GuyNeural"):
         # Save audio to the temporary file
         await communicate.save(temp_filename)
         
-        # Load the audio file
-        audio = AudioSegment.from_mp3(temp_filename)
+        # Initialize pygame mixer
+        pygame.mixer.init()
         
-        # Convert to a format suitable for playback
-        samples = audio.get_array_of_samples()
-        play_obj = sa.play_buffer(samples, num_channels=audio.channels, 
-                                  bytes_per_sample=audio.sample_width, 
-                                  sample_rate=audio.frame_rate)
+        # Load the audio file
+        pygame.mixer.music.load(temp_filename)
+        
+        # Play the audio
+        pygame.mixer.music.play()
 
         # Wait until playback is finished
-        play_obj.wait_done()
+        while pygame.mixer.music.get_busy():
+            await asyncio.sleep(0.1)
 
         # Remove the temporary file
         os.unlink(temp_filename)
