@@ -1,0 +1,483 @@
+/* Global Styles */
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.stApp {
+    background-color: black;
+}
+
+/* Header Styles */
+.header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+    margin-bottom: 30px;
+    margin-top: 1cm;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 10px;
+}
+
+.avatar-icon {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.avatar-icon:hover {
+    transform: rotate(360deg);
+}
+
+.header-content h1 {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    animation: strobe 2s infinite ease-in-out;
+}
+
+/* Chat Area Styles */
+.stChatMessage {
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 20px;
+    max-width: 75%;
+    transition: transform 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.stChatMessage[data-testid="user-message"] {
+    background-color: #1d1d1d !important;
+    color: #ffffffd2;
+    margin-left: auto;
+    text-align: right;
+    border-color: #777777;
+    border-width: 2px;
+    border-radius: 20px;
+    border: 1px solid #1d1d1d !important;
+    backdrop-filter: blur(10px);
+}
+
+.stChatMessage .message {
+    background-image: url('Backend/textures/grainy.png') !important;
+    background-repeat: repeat !important;
+    background-size: 200px 200px !important;
+    color: #000 !important;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.stChatMessage .message strong {
+    color: #1e88e5;
+    font-weight: 600;
+}
+
+.stTextInput > div > div > input {
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    padding: 10px 15px;
+    font-size: 16px;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #1e88e5;
+    box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.2);
+}
+
+.stButton > button {
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .stChatMessage .message {
+        background-image: url('Backend/textures/download (1).png') !important;
+        color: #fff !important;
+    }
+}
+
+.stChatMessage[data-testid="assistant-message"] {
+    background-color: #141414 !important;
+    color: #ffffff;
+}
+
+.stChatMessage:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.525);
+}
+
+/* Avatar Styles */
+.stChatMessage .stAvatar {
+    width: 45px !important;
+    height: 45px !important;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.stChatMessage .stAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Input Area Styles */
+.stChatInputContainer {
+    background-color: transparent !important;
+    position: relative;
+    z-index: 1;
+    border-radius: 25px;
+    border: 1px solid #ffffff !important;
+}
+
+.stChatInput {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+}
+
+.stChatInput::placeholder {
+    color: #888888;
+}
+
+.stChatInput:focus {
+    box-shadow: 0 0 10px #1DA1F2;
+    border: none;
+}
+
+/* Button Styles */
+.stButton>button {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stButton>button:hover {
+    background-color: #E0E0E0 !important;
+    transform: scale(1.05);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #111111;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* Image Styles */
+.stImage>img {
+    border-radius: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    width: 100%;
+    height: auto;
+}
+
+.stImage>img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.981);
+}
+
+/* Title Styles */
+h1 {
+    color: #fffffffc;
+    text-shadow:
+        0 0 20px rgba(255, 255, 255, 0.5),
+        0 0 30px rgba(255, 255, 255, 0.4),
+        0 0 45px rgba(0, 173, 255, 0.4);
+    font-size: 40px;
+    text-align: center;
+    margin-top: -150px; /* Change this from -170px to -150px */
+    letter-spacing: 1.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stChatInputContainer {
+        border-radius: 20px;
+        padding: 10px;
+    }
+
+    .header-content h1 {
+        font-size: 28px;
+    }
+
+    .avatar-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .stImage>img {
+        width: 100%;
+        height: auto;
+    }
+}
+
+/* Remove Streamlit elements */
+#MainMenu,
+footer,
+header {
+    visibility: hidden;
+}
+
+/* Add some padding to the top of the main content to avoid overlap with the grid */
+.main .block-container {
+    padding-top: 2rem;
+}
+
+.fixed-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10vh; /* Reduced from 15vh to 10vh */
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.fixed-grid svg {
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+}
+
+/* Remove these styles */
+/* .stChatFloatingInputContainer, .stChatInput, .stChatInput input, .stChatInput button styles removed */
+
+/* Add this basic style for the chat input */
+.stChatInputContainer {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.stTextInput > div > div > input {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ffffff !important;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+/* Adjust main content padding */
+.main {
+    padding-bottom: 20px !important;
+}
+
+/* Light Theme */
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+
+    .stApp {
+        background-color: white;
+    }
+
+    /* Header Styles */
+    .header-content h1 {
+        color: #000000;
+        text-shadow: none;
+    }
+
+    /* Chat Area Styles */
+    .stChatMessage {
+        background-color: #f0f0f0 !important;
+        color: #000000;
+    }
+
+    .stChatMessage[data-testid="user-message"] {
+        background-color: #e5e5e5 !important;
+        color: #000000;
+        border: 1px solid #cccccc !important;
+    }
+
+    .stChatMessage[data-testid="assistant-message"] {
+        background-color: #ebebeb !important;
+        color: #000000;
+    }
+
+    .stChatMessage:hover {
+        background-color: #d9d9d9 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Input Area Styles */
+    .stChatInputContainer {
+        border: 1px solid #cccccc;
+    }
+
+    .stChatInput {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+    }
+
+    .stChatInput::placeholder {
+        color: #777777;
+    }
+
+    .stChatInput:focus {
+        box-shadow: 0 0 10px #1DA1F2;
+    }
+
+    /* Button Styles */
+    .stButton>button {
+        background-color: #1DA1F2;
+        color: #ffffff;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar-track {
+        background: #eeeeee;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #aaaaaa;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(149, 149, 149, 0.632);
+    }
+
+    /* Title Styles */
+    h1 {
+        color: #000000;
+        text-shadow: none;
+    }
+
+    /* Grid SVG */
+    .fixed-grid svg path {
+        stroke: #000000;
+    }
+
+    /* Streamlit elements */
+    .stTextInput > div > div > input {
+        background-color: #ffffff;
+        color: black;
+        border: 1px solid #cccccc;
+    }
+
+    .stChatMessage {
+        background-color: #f0f0f0 !important;
+    }
+}
+
+/* Position the chat input at the bottom and center it */
+.stChatFloatingInputContainer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    background-color: #0e1117 !important;
+    padding: 1rem !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* Style the input field itself */
+.stChatInput {
+    width: 80% !important;
+    max-width: 800px !important;
+}
+
+/* Center the text in the input field */
+.stChatInput input {
+    text-align: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-right: 40px !important; /* Make room for the send button */
+}
+
+/* Adjust the send button position */
+.stChatInput button {
+    position: absolute !important;
+    right: 5px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+/* Add padding to the main content area */
+.main {
+    padding-bottom: 100px !important;
+}
+
+/* Ensure the chat messages don't get hidden behind the input */
+.stChatMessageContent {
+    margin-bottom: 60px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .stChatInput {
+        width: 90% !important;
+    }
+    
+    .stChatFloatingInputContainer {
+        padding: 0.5rem !important;
+    }
+    
+    .stChatInput input {
+        font-size: 14px !important;
+        left: 50%;
+        padding: 8px 40px 8px 8px !important;
+    }
+    
+    .stChatInput button {
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+
+    .stChatMessage {
+        max-width: 90%;
+    }
+}
+
+/* Chat input styles */
+.stChatInputContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
