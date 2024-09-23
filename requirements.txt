@@ -1,5 +1,3 @@
-pip install --upgrade pip
-
 requests==2.31.0
 Pillow==10.3.0
 streamlit==1.28.0
