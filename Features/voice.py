@@ -1,9 +1,9 @@
 import asyncio
 import edge_tts
-import simpleaudio as sa
+from pydub import AudioSegment
 import tempfile
 import os
-import wave
+import simpleaudio as sa
 
 async def say_async(text, voice="en-US-GuyNeural"):
     """
@@ -18,17 +18,24 @@ async def say_async(text, voice="en-US-GuyNeural"):
         communicate = edge_tts.Communicate(text, voice)
         
         # Create a temporary file to store the audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
             temp_filename = temp_audio.name
         
         # Save audio to the temporary file
         await communicate.save(temp_filename)
         
-        # Play the audio using simpleaudio
-        wave_obj = sa.WaveObject.from_wave_file(temp_filename)
-        play_obj = wave_obj.play()
-        play_obj.wait_done()  # Wait until sound has finished playing
+        # Load the audio file
+        audio = AudioSegment.from_mp3(temp_filename)
         
+        # Convert to a format suitable for playback
+        samples = audio.get_array_of_samples()
+        play_obj = sa.play_buffer(samples, num_channels=audio.channels, 
+                                  bytes_per_sample=audio.sample_width, 
+                                  sample_rate=audio.frame_rate)
+
+        # Wait until playback is finished
+        play_obj.wait_done()
+
         # Remove the temporary file
         os.unlink(temp_filename)
         
