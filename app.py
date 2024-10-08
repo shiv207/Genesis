@@ -23,7 +23,7 @@ import io
 # Initialize API clients
 wake_word = ['optimus','jarvis','hal','siri','gemini', 'billie']
 
-groq_client = Groq(api_key='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')
+groq_client = Groq(api_key='grok api key')
 
 st.set_page_config(page_title="Optimus", layout="wide", page_icon="Images/avatar/neura.png")
 
