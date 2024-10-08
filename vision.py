@@ -6,7 +6,7 @@ from PIL import Image, ImageGrab
 import streamlit as st
 
 # Configure the Generative AI model
-genai.configure(api_key='AIzaSyBpuc72uAd9qcrO7oyrc2u4zq3g7UmjKpI')
+genai.configure(api_key='')
 
 generation_config = {
     'temperature': 0.7,
