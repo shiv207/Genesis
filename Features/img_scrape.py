@@ -5,9 +5,9 @@ from bs4 import BeautifulSoup
 from groq import Groq
 
 # Replace with your actual keys
-API_KEY = "AIzaSyDHyK7T14VG8vMwaJhQicBRovAb76dkdxk"
+API_KEY = "google_api_key"
 SEARCH_ENGINE_ID = "d6604d6b7dbb9447a"
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "grok_api"
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
