@@ -6,7 +6,7 @@ import os
 import json
 
 API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer <hugging_face_api>"}
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)
