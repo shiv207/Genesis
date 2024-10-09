@@ -1,6 +1,6 @@
 from groq import Groq
 
-groq_client = Groq(api_key='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')
+groq_client = Groq(api_key='groq_api_key') # put your groq api key here
 
 # System message and configuration
 sys_msg = (

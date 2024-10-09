@@ -12,9 +12,9 @@ from PIL import Image
 import io
 
 # Replace with your actual keys
-API_KEY = "AIzaSyDHyK7T14VG8vMwaJhQicBRovAb76dkdxk"
-SEARCH_ENGINE_ID = "d6604d6b7dbb9447a"
-GROQ_API_KEY = "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"
+API_KEY = "googel_api" #put your google console api key here
+SEARCH_ENGINE_ID = "programmable_search_engine_id" #put your programmable search engine id here
+GROQ_API_KEY = "groq_api_key" #put your groq api key here
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
@@ -44,7 +44,7 @@ def get_brief_description(query):
     
     try:
         response = groq_client.chat.completions.create(
-            model="mixtral-8x7b-32768",
+            model="mixtral-8x7b-32768", # choose any models you want
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides brief descriptions."},
                 {"role": "user", "content": prompt}

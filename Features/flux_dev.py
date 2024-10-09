@@ -7,7 +7,7 @@ import json
 import streamlit as st
 
 API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer <your_huggingface_api_key>"} # put your huggingface api key here
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)

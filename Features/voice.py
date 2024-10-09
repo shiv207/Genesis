@@ -6,7 +6,7 @@ import tempfile
 import base64
 
 def text_to_speech_deepgram(text: str):
-    API_KEY = "3956c457b60662f248076b00820080a8b72b1fbf"
+    API_KEY = "deepgram_api_key" #put your deepgram api key here
 
     try:
         client = DeepgramClient(api_key=API_KEY)

@@ -18,7 +18,7 @@ import base64
 
 # Initialize API clients
 wake_word = 'optimus'
-groq_client = Groq(api_key='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')
+groq_client = Groq(api_key='groq_api_key') # put your groq api key here
 
 st.set_page_config(page_title="Optimus", layout="wide", page_icon="Images/avatar/neura.png", initial_sidebar_state="collapsed")
 
@@ -38,7 +38,7 @@ convo = [{'role': 'system', 'content': sys_msg}]
 def groq_prompt(prompt):
     convo = [{'role': 'user', 'content': prompt}]
     
-    chat_completion = groq_client.chat.completions.create(messages=convo, model='Llama3-70b-8192')
+    chat_completion = groq_client.chat.completions.create(messages=convo, model='Llama3-70b-8192') # choose any models you want
     response = chat_completion.choices[0].message.content  # Access content directly
     convo.append({'role': 'assistant', 'content': response})
     
