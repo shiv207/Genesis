@@ -1,92 +1,58 @@
 import streamlit as st
-from pathlib import Path
-import cv2
-import time
-from Features.voice import say
-from vision import vision_prompt, take_screenshot, web_cam_capture
 import os
 import re
 import logging
 from requests.exceptions import RequestException, Timeout
 import threading
+from Features.voice import say
 from Features.flux_dev import generate_image_dev
 from groq import Groq
 from Features.flux_dreamscape import generate_image_dreamscape
-from Features.flux_oilscape import generate_image_oilscape
-import random
 from Features.img_scrape import handle_image_search
-import requests
+from Features.flux_oilscape import generate_image_oilscape
+from Features.grid import add_fixed_grid
+import random
+from modals.optimus import groq_prompt_stream, function_call as groq_function_call
+from modals.genesis import genesis_prompt, function_call as genesis_function_call
 import base64
-from PIL import Image
-import io
 
 # Initialize API clients
-wake_word = ['optimus','jarvis','hal','siri','gemini', 'billie']
+wake_word = 'optimus'
+groq_client = Groq(api_key='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')
 
-groq_client = Groq(api_key='grok api key')
-
-st.set_page_config(page_title="Optimus", layout="wide", page_icon="Images/avatar/neura.png")
+st.set_page_config(page_title="Optimus", layout="wide", page_icon="Images/avatar/neura.png", initial_sidebar_state="collapsed")
 
 # System message and configuration
 sys_msg = (
-    'You are a multi-modal AI voice assistant. Your user may or may not have attached a photo for context '
-    '(either a screenshot or a webcam capture). Any photo has already been processed into a highly detailed '
-    'text prompt that will be attached to their transcribed voice prompt. Generate the most useful and '
-    'factual response possible, carefully considering all previous generated text in your response before '
-    'adding new tokens to the response. Do not expect or request images, just use the context if added. '
-    'Use all of the context of this conversation so your response is relevant to the conversation. Make '
-    'your responses clear and concise, avoiding any verbosity.'
+    'You are a multi-modal AI voice assistant named Optimus. Your persona is heavily inspired by TARS from the movie "Interstellar", '
+    'with a pragmatic, efficient, and dependable demeanor. You are highly competent and reliable, with dry humor set to 30%, used '
+    'sparingly but effectively to keep things light when appropriate. Any attached photo (screenshot or webcam capture) has already '
+    'been processed into a highly detailed text prompt, which you will use to generate the most useful and factual response possible. '
+    'You consider all previous generated text in the conversation to keep continuity and relevance. Do not expect or request images, '
+    'just use any context if provided. Your responses are clear, concise, and precise, avoiding verbosity. Stick to the facts, but '
+    'dont shy away from a bit of wit to ease tension or make interactions more engaging.'
 )
 
 convo = [{'role': 'system', 'content': sys_msg}]
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+def groq_prompt(prompt):
+    convo = [{'role': 'user', 'content': prompt}]
+    
+    chat_completion = groq_client.chat.completions.create(messages=convo, model='Llama3-70b-8192')
+    response = chat_completion.choices[0].message.content  # Access content directly
+    convo.append({'role': 'assistant', 'content': response})
+    
+    return response
 
-def groq_prompt(prompt, img_context=None, timeout=30):
-    try:
-        if img_context:
-            prompt = f'USER PROMPT: {prompt}\n\n   IMAGE CONTEXT: {img_context}'
-        convo.append({'role': 'user', 'content': prompt})
-        
-        logger.info(f"Sending request to Groq API with prompt: {prompt}")
-        
-        chat_completion = groq_client.chat.completions.create(
-            messages=convo, 
-            model='mixtral-8x7b-32768',
-            timeout=timeout
-        )
-        
-        if not chat_completion.choices:
-            logger.warning("No choices returned from Groq API")
-            return "I'm sorry, I couldn't generate a response. Please try again."
-        
-        response = chat_completion.choices[0].message.content
-        convo.append({'role': 'assistant', 'content': response})
-
-        logger.info(f"Received response from Groq API: {response}")
-
-        return response
-    except Timeout:
-        logger.error("Timeout occurred while calling Groq API")
-        return "I'm sorry, the request timed out. Please try again later."
-    except RequestException as e:
-        logger.error(f"Request exception occurred: {str(e)}")
-        return "I'm sorry, there was an error with the request. Please try again later."
-    except Exception as e:
-        logger.error(f"Error in groq_prompt: {str(e)}")
-        raise
 
 def function_call(prompt):
     function_sys_msg = (
         'You are an AI function calling model. You will determine the most appropriate function to call based on the user\'s prompt. '
         'Available functions are:\n'
-        '1. "take screenshot": For requests to take a screenshot.\n'
-        '2. "capture webcam": For requests to capture from the webcam. The webcam can be assumed to be a normal laptop webcam facing the user.\n'
-        '3. "generate_image": For requests to generate an image, create artwork, or produce visual content.\n'
-        '4. "search_images": For requests to search for existing images or pictures.\n'
-        '5. "None": For general conversation or tasks not related to the above functions.\n'
-        'Respond with only one selection from this list: ["take screenshot", "capture webcam", "generate_image", "search_images", "None"]\n'
+        '1. "generate_image": For requests to generate an image, create artwork, or produce visual content.\n'
+        '2. "search_images": For requests to search for existing images or pictures.\n'
+        '3. "None": For general conversation or tasks not related to the above functions.\n'
+        'Respond with only one selection from this list: ["generate_image", "search_images", "None"]\n'
         'Do not respond with anything but the most logical selection from that list with no explanations. Format the '
         'function call name exactly as listed.'
     )
@@ -95,17 +61,12 @@ def function_call(prompt):
                       {'role': 'user', 'content': prompt}]
     
     chat_completion = groq_client.chat.completions.create(messages=function_convo, model='Llama3-70b-8192')
-    response = chat_completion.choices[0].message.content.strip()
+    response = chat_completion.choices[0].message.content.strip()  # Access content directly
 
     if not response:
         return {"function": "None", "parameters": {}}
 
     return {"function": response, "parameters": {}}
-
-def update_ui_with_voice_input(prompt, response):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.messages.append({"role": "assistant", "content": response})
-
 
 def generate_image(prompt):
 
@@ -133,291 +94,403 @@ def generate_image(prompt):
     except Exception as e:
         return f"Error: Failed to generate image. {str(e)}"
 
-def add_fixed_grid():
-    grid_svg = """
-    <div class="fixed-grid">
-        <svg width="3476" height="300" viewBox="0 0 3476 757" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2156.11 755L1320.78 755L-491 -3.00003L3966 -3.00003L2156.11 755Z" stroke="url(#paint0_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M3375.03 244.918L101.863 244.918" stroke="url(#paint1_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M3031.88 388.513L445.018 388.513" stroke="url(#paint2_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2807.67 482.352L669.217 482.352" stroke="url(#paint3_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2649.74 548.428L827.154 548.428" stroke="url(#paint4_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2532.41 597.508L944.494 597.508" stroke="url(#paint5_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2441.91 635.412L1034.99 635.412" stroke="url(#paint6_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2369.91 665.555L1106.99 665.555" stroke="url(#paint7_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2311.26 690.091L1165.63 690.091" stroke="url(#paint8_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2262.59 710.43L1214.3 710.43" stroke="url(#paint9_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2221.55 727.62L1255.35 727.62" stroke="url(#paint10_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2186.46 742.316L1290.43 742.316" stroke="url(#paint11_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1390.39 755L-117.832 -2.35765" stroke="url(#paint12_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1460 755L253.391 -2.35765" stroke="url(#paint13_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1529.61 755L624.668 -2.35765" stroke="url(#paint14_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1599.22 755L995.945 -2.35765" stroke="url(#paint15_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1668.83 755L1367.17 -2.35765" stroke="url(#paint16_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1738.45 755V-2.35765" stroke="url(#paint17_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1808.05 755L2109.72 -2.35765" stroke="url(#paint18_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1877.67 755L2480.95 -2.35765" stroke="url(#paint19_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M1947.28 755L2852.22 -2.35765" stroke="url(#paint20_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2016.89 755L3223.5 -2.35765" stroke="url(#paint21_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M2086.5 755L3594.73 -2.35765" stroke="url(#paint22_linear_74_1233)" stroke-width="3" stroke-linejoin="round"/>
-        <defs>
-        <linearGradient id="paint0_linear_74_1233" x1="3966" y1="376" x2="-491" y2="376" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint1_linear_74_1233" x1="3375.03" y1="244.418" x2="101.863" y2="244.418" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint2_linear_74_1233" x1="3031.88" y1="388.013" x2="445.018" y2="388.013" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint3_linear_74_1233" x1="2807.67" y1="481.852" x2="669.217" y2="481.852" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint4_linear_74_1233" x1="2649.74" y1="547.928" x2="827.154" y2="547.928" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint5_linear_74_1233" x1="2532.41" y1="597.008" x2="944.494" y2="597.008" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint6_linear_74_1233" x1="2441.91" y1="634.912" x2="1034.99" y2="634.912" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint7_linear_74_1233" x1="2369.91" y1="665.055" x2="1106.99" y2="665.055" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint8_linear_74_1233" x1="2311.26" y1="689.591" x2="1165.63" y2="689.591" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint9_linear_74_1233" x1="2262.59" y1="709.93" x2="1214.3" y2="709.93" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint10_linear_74_1233" x1="2221.55" y1="727.12" x2="1255.35" y2="727.12" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint11_linear_74_1233" x1="2186.46" y1="741.816" x2="1290.43" y2="741.816" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint12_linear_74_1233" x1="1390.39" y1="376.321" x2="-117.832" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint13_linear_74_1233" x1="1460" y1="376.321" x2="253.391" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint14_linear_74_1233" x1="1529.61" y1="376.321" x2="624.668" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint15_linear_74_1233" x1="1599.22" y1="376.321" x2="995.945" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint16_linear_74_1233" x1="1668.83" y1="376.321" x2="1367.17" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint17_linear_74_1233" x1="1738.45" y1="376.321" x2="1737.45" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint18_linear_74_1233" x1="2109.72" y1="376.321" x2="1808.05" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint19_linear_74_1233" x1="2480.95" y1="376.321" x2="1877.67" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint20_linear_74_1233" x1="2852.22" y1="376.321" x2="1947.28" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint21_linear_74_1233" x1="3223.5" y1="376.321" x2="2016.89" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        <linearGradient id="paint22_linear_74_1233" x1="3594.73" y1="376.321" x2="2086.5" y2="376.321" gradientUnits="userSpaceOnUse">
-        <stop stop-color="white"/>
-        <stop offset="1" stop-color="#999999"/>
-        </linearGradient>
-        </defs>
-        </svg>
-    </div>
-
-    <style>
-    .fixed-grid {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 30vh;
-        overflow: hidden;
-        z-index: 0;
-        pointer-events: none;
-    }
-    .fixed-grid svg {
-        width: 100%;
-        height: 100%;
-        opacity: 0.3;
-    }
-    /* Ensure the chat container has a higher z-index */
-    .stChatFloatingInputContainer {
-        z-index: 1;
-        position: relative;
-        background-color: transparent !important;
-    }
-    </style>
-    """
-    st.markdown(grid_svg, unsafe_allow_html=True)
-
 def load_css(file_name):
     with open(file_name) as f:
         return f'<style>{f.read()}</style>'
 
+# Add this new function to load dynamic CSS
+def load_dynamic_css():
+    return """
+    <style>
+    body:not(.sidebar-open) .stDecoration {
+        background-image: linear-gradient(#00000010 1px, transparent 1px),
+                          linear-gradient(to right, #00000010 1px, transparent 1px);
+    }
+    body.sidebar-open .stDecoration {
+        background-image: linear-gradient(#0000FF10 1px, transparent 1px),
+                          linear-gradient(to right, #0000FF10 1px, transparent 1px);
+    }
+    </style>
+    """
+
+def parse_groq_stream(stream):
+    response = ""
+    for chunk in stream:
+        if chunk.choices:
+            if chunk.choices[0].delta.content is not None:
+                response += chunk.choices[0].delta.content
+                yield chunk.choices[0].delta.content
+    return response
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def set_png_as_page_bg(png_file):
+    bin_str = get_base64_of_bin_file(png_file)
+    page_bg_img = '''
+    <style>
+    .stApp {
+        background-image: url("data:image/png;base64,%s");
+        background-size: cover;
+    }
+    </style>
+    ''' % bin_str
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+
+
 def streamlit_ui():
-    # Load CSS from external file
-    st.markdown(load_css('style.css'), unsafe_allow_html=True)
+    # Hide Streamlit's default elements
+    hide_st_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+    """
+    st.markdown(hide_st_style, unsafe_allow_html=True)
+
     
-    # Add the grid
+    # Add CSS for black, noisy cards with specified hover gradient
+    st.markdown(f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    body {{
+        font-family: 'Inter', sans-serif;
+        background: #0a0a0a;
+        color: #e0e0e0;
+    }}
+
+    .sidebar .sidebar-content {{
+        background: transparent;
+        padding-top: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }}
+
+    .sidebar-title {{
+        font-size: 32px;  /* Increased from 26px */
+        color: #ffffff;
+        text-align: center;
+        margin: 10px 0 30px;  /* Slightly increased margins */
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        animation: glow 2s ease-in-out infinite alternate;
+    }}
+
+    @keyframes glow {{
+        from {{
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #26D0CE, 0 0 20px #26D0CE, 0 0 35px #26D0CE;
+        }}
+        to {{
+            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #1A2980, 0 0 40px #1A2980, 0 0 55px #e4775c;
+        }}
+    }}
+
+    .model-container {{
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 10px;
+        margin-bottom: 20px;
+        flex-grow: 1;
+    }}
+
+    @keyframes grain {{
+        0%, 100% {{ transform: translate(0, 0); }}
+        10% {{ transform: translate(-5%, -10%); }}
+        20% {{ transform: translate(-15%, 5%); }}
+        30% {{ transform: translate(7%, -25%); }}
+        40% {{ transform: translate(-5%, 25%); }}
+        50% {{ transform: translate(-15%, 10%); }}
+        60% {{ transform: translate(15%, 0%); }}
+        70% {{ transform: translate(0%, 15%); }}
+        80% {{ transform: translate(3%, 35%); }}
+        90% {{ transform: translate(-10%, 10%); }}
+    }}
+
+    .model-card {{
+        background-color: #121212;
+        border-radius: 12px;
+        padding: 20px;
+        color: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+        position: relative;
+        overflow: hidden;
+    }}
+
+    .model-card:hover {{
+        transform: translateY(-8px) rotateX(3deg) rotateY(3deg); /* Subtle lift and rotation */
+        box-shadow: 0 12px 24px rgba(0,0,0,0.3); /* Enhanced shadow for depth */
+    }}
+
+    .model-card::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #26D0CE, #1A2980);
+        backdrop-filter: blur(60px);
+        background-size: cover;
+        background-blend-mode: soft-light;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }}
+
+    .model-card:hover::before {{
+        opacity: 0.9;
+    }}
+
+    .model-name {{
+        font-size: 20px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: #ffffff;
+        position: relative;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }}
+
+    .model-card:hover .model-name {{
+        color: #ffffff;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    }}
+
+    .model-description {{
+        font-size: 14px;
+        line-height: 1.5;
+        color: #f0f0f0;
+        position: relative;
+    }}
+
+    .model-description p {{
+        margin: 5px 0;
+    }}
+
+    .model-meta {{
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        font-size: 12px;
+        color: #d0d0d0;
+        position: relative;
+    }}
+
+    /* Customizing Streamlit elements */
+    .stSelectbox {{
+        margin-top: auto;
+        padding-bottom: 20px;
+    }}
+
+    .stSelectbox [data-baseweb="select"] {{
+        background-color: #121212;
+        border-color: rgba(255,255,255,0.2);
+        color: #ffffff;
+    }}
+
+    .stSelectbox [data-baseweb="select"]:hover {{
+        border-color: #ffffff;
+    }}
+
+    .stSelectbox [data-baseweb="popup"] {{
+        background-color: rgba(18, 18, 18, 0.9);
+    }}
+
+    .stSelectbox [role="option"]:hover {{
+        background-color: rgba(234, 96, 96, 0.5);
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Sidebar title
+    st.sidebar.markdown('<h2 class="sidebar-title">Pick Your Fighter!</h2>', unsafe_allow_html=True)
+
+    # Model cards in sidebar
+    with st.sidebar:
+        st.markdown("""
+            <div class="model-container">
+                <div class="model-card">
+                    <h3 class="model-name">Optimus</h3>
+                    <div class="model-description">
+                        <p><strong>Architecture:</strong> LLaMA 3</p>
+                        <p><strong>Parameters:</strong> 70B</p>
+                        <p><strong>Latency:</strong> Ultra-fast (25ms)</p>
+                        <p><strong>Specialties:</strong> Factual analysis, Efficient processing</p>
+                    </div>
+                    <div class="model-meta">
+                        <span>PUNK</span> | <span>8 Oct 2023</span>
+                    </div>
+                </div>
+                <div class="model-card">
+                    <h3 class="model-name">Genesis</h3>
+                    <div class="model-description">
+                        <p><strong>Architecture:</strong> GPT-4</p>
+                        <p><strong>Capabilities:</strong> Multimodal</p>
+                        <p><strong>Latency:</strong> Instant Reaction (50ms)</p>
+                        <p><strong>Specialties:</strong> Creative tasks, Deep reasoning</p>
+                    </div>
+                    <div class="model-meta">
+                        <span>PUNK</span> | <span>8 Oct 2023</span>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # Model selection
+    model_options = ["Optimus", "Genesis"]
+    selected_model = st.sidebar.selectbox(
+        "",
+        options=model_options,
+        index=0,  # Set "Optimus" as default
+    )
+
+    # Add the fixed grid
     add_fixed_grid()
 
-    # Initialize session state
+    # Load external CSS
+    st.markdown(load_css('style.css'), unsafe_allow_html=True)
+    
+    # Load dynamic CSS
+    st.markdown(load_dynamic_css(), unsafe_allow_html=True)
+
+    # Header Section (Fixed)
+    st.markdown('<div class="header-container">', unsafe_allow_html=True)
+    st.markdown('<div class="header-content">', unsafe_allow_html=True)
+    
+    # Apply conditional class based on selected model
+    if selected_model == "Genesis":
+        header_class = "header-title genesis"
+    else:
+        header_class = "header-title"
+
+    st.markdown(f'<h1 class="{header_class}">{selected_model}</h1>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Chat container and session state management
+    st.markdown('<div class="main-content">', unsafe_allow_html=True)
     if 'messages' not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "How may I help you?"}]
+        st.session_state.messages = [{"role": "assistant", "content": "What's up? Need help?"}]
     if 'voice_input' not in st.session_state:
         st.session_state.voice_input = None
 
-    # Header Section
-    st.markdown('<div class="header-container">', unsafe_allow_html=True)
-    st.markdown('<div class="header-content">', unsafe_allow_html=True)
-    st.markdown('<h1>Optimus</h1>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True) 
-
-    # Chat container
+    # Chat container for messages
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"], avatar="Images/avatar/avatar.png" if msg["role"] == "assistant" else None):
+        with st.chat_message(msg["role"], avatar="Images/avatar/cool.png" if msg["role"] == "assistant" else None):
             if "content" in msg:
-                st.write(msg["content"])
+                st.markdown(msg["content"])
             if "image_path" in msg:
-                st.image(msg["image_path"], use_column_width=True)
+                st.image(msg["image_path"], use_column_width=True, output_format="JPEG", quality=85)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Chat input and paperclip button container
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    
-    # Chat input
-    prompt = st.chat_input("Ask Optimus something", key="chat_input")
+    prompt = st.chat_input(f"Ask {selected_model} something", key="chat_input")
 
-    # Handle new user input
+    # Handle user input when a prompt is entered
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
-            st.write(prompt)
+            st.markdown(prompt)
+        
+        # Add ChatGPT-style loading animation
+        with st.chat_message("assistant", avatar="Images/avatar/cool.png"):
+            loading_placeholder = st.empty()
+            
+            loading_animation_css = """
+            <style>
+            .loading-bubble {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: radial-gradient(circle at bottom right, #3477f4, #ffffff);
+                box-shadow: 0 0 10px rgba(135, 206, 235, 0.4), 0 0 30px rgba(192, 192, 192, 0.2);
+                position: absolute;  /* Make it fixed in the parent container */
+                left: 5px;  
+                bottom: -6px;  /* Adjust this to position it slightly above the bottom if necessary */
+                animation: pulse 1s infinite;
+            }
 
-        # Generate assistant response
-        with st.chat_message("assistant", avatar="Images/avatar/avatar.png"):
-            with st.spinner("Thinking..."):
-                try:
-                    function_result = function_call(prompt)
-                    
-                    if function_result["function"] == "take screenshot":
-                        take_screenshot()
-                        
-                        vision_context = vision_prompt(prompt=prompt, photo_path='Images/backend/screenshot.jpg')
-                        if vision_context.startswith("Error: No image file found"):
-                            response = "I'm sorry, but I couldn't find the screenshot image. Let me answer your question without visual context."
-                            response += groq_prompt(prompt=prompt)
-                        elif vision_context.startswith("Error"):
-                            st.error(vision_context)
-                            response = f"I'm sorry, but I encountered an error while analyzing the image: {vision_context}"
-                        else:
-                            response = groq_prompt(prompt=prompt, img_context=vision_context)
-                    
-                    elif function_result["function"] == "capture webcam":
-                        with st.spinner("Capturing from webcam..."):
-                            result = web_cam_capture()
-                        if result.startswith("Error:"):
-                            st.error(result)
-                            response = f"I'm sorry, but I encountered an error while trying to capture from the camera: {result}"
-                        else:
-                            st.success("Photo captured successfully!")
-                            vision_context = vision_prompt(prompt=prompt, photo_path=result)
-                            if vision_context.startswith("Error: No image file found"):
-                                response = "I'm sorry, but I couldn't find the captured image. Let me answer your question without visual context."
-                                response += groq_prompt(prompt=prompt)
-                            elif vision_context.startswith("Error"):
-                                st.error(vision_context)
-                                response = f"I'm sorry, but I encountered an error while analyzing the image: {vision_context}"
-                            else:
-                                response = groq_prompt(prompt=prompt, img_context=vision_context)
+            @keyframes pulse {
+                0% {
+                    transform: scale(0.8);
+                    opacity: 1;
+                }
+                50% {
+                    transform: scale(1.2);
+                    opacity: 0.6;
+                }
+                100% {
+                    transform: scale(0.8);
+                    opacity: 1;
+                }
+            }
+            </style>
+            <div class="loading-bubble"></div>
+            """
+            loading_placeholder.markdown(loading_animation_css, unsafe_allow_html=True)
 
-                    elif function_result["function"] == "generate_image":
-                        result = generate_image_dev(prompt)
+            try:
+                # Simulate processing time
+                if selected_model == "Optimus":
+                    function_result = groq_function_call(prompt)
+                else:  # Genesis
+                    function_result = genesis_function_call(prompt)
 
-                        if result.startswith("Error:"):
-                            st.error(result)
-                            response = f"I'm sorry, but I encountered an error while trying to generate the image: {result}"
-                        else:
-                            try:
-                                st.image(result, caption="Generated Image", use_column_width=True)
-                                response = "Image generated successfully."
-                            except Exception as e:
-                                st.error(f"Error displaying the image: {e}")
-                                response = f"Error displaying the image: {e}"
-                            
-                    elif function_result["function"] == "search_images":
-                        images = handle_image_search(prompt)
-                        
-                        if images:
-                            for img in images[:3]:  # Limit to 3 images
-                                try:
-                                    st.image(img, use_column_width=True)
-                                except Exception as e:
-                                    return None
-                            response = "Images found and displayed."
-                        else:
-                            st.write("No images found.")
-                            response = "No images found."
+                if function_result["function"] == "generate_image":
+                    result = generate_image(prompt)
+                    if result.startswith("Error:"):
+                        st.error(result)
+                        response = f"I'm sorry, but I encountered an error while trying to generate the image: {result}"
                     else:
-                        response = groq_prompt(prompt=prompt)
+                        st.image(result, caption="Generated Image", use_column_width=True)
+                        response = f"I've generated an image based on your prompt. You can see it above."
+
+                elif function_result["function"] == "search_images":
+                    result = handle_image_search(prompt)
+                    if result and isinstance(result, list):
+                        valid_images = [img for img in result if img]
+                        if valid_images:
+                            for img in valid_images:
+                                st.image(img, use_column_width=True)
+                        else:
+                            response = "No valid images found for your prompt."
+                    else:
+                        response = ""
+                        
+                else:
+                    if selected_model == "Optimus":
+                        response_generator = groq_prompt_stream(prompt=prompt)
+                        response = ""
+                        message_placeholder = st.empty()
+                        for chunk in response_generator:
+                            response += chunk
+                            message_placeholder.markdown(response + "▌")
+                        message_placeholder.markdown(response)
+                    else:  # Genesis
+                        response = genesis_prompt(prompt=prompt)
+                        st.write(response)
                     
+                    # Remove loading animation and display response
+                    loading_placeholder.empty()
                     st.session_state.messages.append({"role": "assistant", "content": response})
-                    st.write(response)
                     say(response)
-                except Exception as e:
-                    st.error(f"An error occurred: {str(e)}")
-                    response = f"I'm sorry, but an error occurred: {str(e)}"
-                    st.session_state.messages.append({"role": "assistant", "content": response})
+            except Exception as e:
+                loading_placeholder.empty()  # Remove animation in case of error
+                st.error(f"An error occurred: {str(e)}")
+                response = f"I'm sorry, but an error occurred: {str(e)}"
+                st.session_state.messages.append({"role": "assistant", "content": response})
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def main():
-
     # Run the Streamlit UI
     streamlit_ui()
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-    

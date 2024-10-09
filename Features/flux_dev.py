@@ -7,13 +7,29 @@ import json
 import streamlit as st
 
 API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
-headers = {"Authorization": "Bearer <hugging_face_api>"}
+headers = {"Authorization": "Bearer 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"}
 
 def query(payload):
 	response = requests.post(API_URL, headers=headers, json=payload)
 	return response
 
+def apply_custom_css():
+    custom_css = """
+    <style>
+        div[data-testid="stImage"] > img {
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            max-width: 100%;
+        }
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
+
+
 def generate_image_dev(prompt):
+	apply_custom_css()
+
 	print(f"Generating image with prompt: {prompt}")
 	
 	payload = {
@@ -64,24 +80,3 @@ def generate_image_dev(prompt):
 	except Exception as e:
 		print(f"Unexpected error: {e}")
 		return f"Error: Unexpected error occurred: {str(e)}"
-
-# Add this at the end of the file
-if __name__ == "__main__":
-	# Add the CSS styles using st.markdown
-	st.markdown("""
-	<style>
-	div[data-testid="stImage"] > img {
-	    border-radius: 20px;
-	    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	    transition: all 0.3s ease-in-out;
-	    max-width: 100%;
-	    height: auto;
-	    width: 100%;
-	}
-
-	div[data-testid="stImage"] > img:hover {
-	    transform: scale(1.03);
-	    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-	}
-	</style>
-	""", unsafe_allow_html=True)

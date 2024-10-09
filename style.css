@@ -1,30 +1,58 @@
 /* Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
 body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #000000;
     color: #ffffff;
-    transition: background-color 0.3s ease-in-out;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
 .stApp {
-    background-color: black;
+    background-color: rgb(0, 0, 0);
 }
 
-/* Header Styles */
-.header-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0;
-    margin-bottom: 30px;
-    margin-top: 1cm;
-}
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
 
 .header-content {
-    display: flex;
-    align-items: center;
     position: relative;
-    gap: 10px;
+    left: 20px;
+    text-align: left;
+    width: auto;
+    padding: 0;
+}
+
+.header-content h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(45deg, #ff00ff, #00ffff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease-in-out;
+}
+
+.header-content h1:hover {
+    transform: scale(1.05);
+    letter-spacing: 3px;
+}
+
+/* Add a subtle animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+
+.header-content h1 {
+    animation: pulse 3s infinite ease-in-out;
 }
 
 .avatar-icon {
@@ -34,6 +62,22 @@ body {
     transition: transform 0.3s ease;
 }
 
+/* Strobe effect */
+@keyframes strobe {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Add a class to trigger the strobe effect */
+.strobe-active h1 {
+    animation: strobe 0.1s steps(2, start) infinite;
+}
+
+/* Dark Theme Header */
+.header-content.strobe-active h1 {
+    text-shadow: 0 0 25px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.7);
+}
 .avatar-icon:hover {
     transform: rotate(360deg);
 }
@@ -47,6 +91,20 @@ body {
     animation: strobe 2s infinite ease-in-out;
 }
 
+.stImage {
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+    max-width: 100%;
+    height: auto;
+    width: 100%;
+}
+
+.stImage:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Chat Area Styles */
 .stChatMessage {
     border-radius: 20px;
@@ -54,23 +112,22 @@ body {
     margin-bottom: 20px;
     max-width: 75%;
     transition: transform 0.3s ease;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: rgba(23, 23, 23, 0.778) !important;
 }
 
 .stChatMessage[data-testid="user-message"] {
-    background-color: #1d1d1d !important;
+    background-color: #393939 !important;
     color: #ffffffd2;
     margin-left: auto;
     text-align: right;
     border-color: #777777;
     border-width: 2px;
     border-radius: 20px;
-    border: 1px solid #1d1d1d !important;
+    border: 1px solid #000000 !important;
     backdrop-filter: blur(10px);
 }
 
 .stChatMessage .message {
-    background-image: url('Backend/textures/grainy.png') !important;
     background-repeat: repeat !important;
     background-size: 200px 200px !important;
     color: #000 !important;
@@ -84,38 +141,6 @@ body {
 .stChatMessage .message strong {
     color: #1e88e5;
     font-weight: 600;
-}
-
-.stTextInput > div > div > input {
-    border-radius: 20px;
-    border: 1px solid #e0e0e0;
-    padding: 10px 15px;
-    font-size: 16px;
-}
-
-.stTextInput > div > div > input:focus {
-    border-color: #1e88e5;
-    box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.2);
-}
-
-.stButton > button {
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-    .stChatMessage .message {
-        background-image: url('Backend/textures/download (1).png') !important;
-        color: #fff !important;
-    }
 }
 
 .stChatMessage[data-testid="assistant-message"] {
@@ -136,69 +161,14 @@ body {
     overflow: hidden;
 }
 
+.st-emotion-cache-qdbtli {
+    background-color: #000000;
+}
+
 .stChatMessage .stAvatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-/* Input Area Styles */
-.stChatInputContainer {
-    background-color: transparent !important;
-    position: relative;
-    z-index: 1;
-    border-radius: 25px;
-    border: 1px solid #ffffff !important;
-}
-
-.stChatInput {
-    background-color: transparent !important;
-    color: #ffffff !important;
-    border: 1px solid #ffffff !important;
-}
-
-.stChatInput::placeholder {
-    color: #888888;
-}
-
-.stChatInput:focus {
-    box-shadow: 0 0 10px #1DA1F2;
-    border: none;
-}
-
-/* Button Styles */
-.stButton>button {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    font-weight: bold;
-    border: none;
-    border-radius: 30px;
-    padding: 12px 24px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.stButton>button:hover {
-    background-color: #E0E0E0 !important;
-    transform: scale(1.05);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #111111;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #888;
 }
 
 /* Image Styles */
@@ -224,81 +194,108 @@ h1 {
         0 0 45px rgba(0, 173, 255, 0.4);
     font-size: 40px;
     text-align: center;
-    margin-top: -150px; /* Change this from -170px to -150px */
+    margin-top: -150px;
     letter-spacing: 1.5px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .stChatInputContainer {
-        border-radius: 20px;
-        padding: 10px;
-    }
-
-    .header-content h1 {
-        font-size: 28px;
-    }
-
-    .avatar-icon {
-        width: 30px;
-        height: 30px;
-    }
-
-    .stImage>img {
-        width: 100%;
-        height: auto;
-    }
-}
-
-/* Remove Streamlit elements */
-#MainMenu,
-footer,
-header {
-    visibility: hidden;
-}
-
-/* Add some padding to the top of the main content to avoid overlap with the grid */
-.main .block-container {
-    padding-top: 2rem;
-}
-
-.fixed-grid {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 10vh; /* Reduced from 15vh to 10vh */
-    overflow: hidden;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.fixed-grid svg {
-    width: 100%;
-    height: 100%;
-    opacity: 0.1;
-}
-
-/* Remove these styles */
-/* .stChatFloatingInputContainer, .stChatInput, .stChatInput input, .stChatInput button styles removed */
-
-/* Add this basic style for the chat input */
-.stChatInputContainer {
+/* Chat Input Styling */
+.stChatFloatingInputContainer {
     background-color: transparent !important;
+    position: fixed;
+    bottom: 2cm;
+    width: 100%;
+    padding: 15px;
+    z-index: 2;
+}
+
+.stChatInputContainer {
+    background-color: #000000 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 10px 15px !important;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stChatInputContainer input {
+    background-color: #000000 !important;
+    color: white !important;
     border: none !important;
+    outline: none;
+    flex-grow: 1;
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 15px;
 }
 
-.stTextInput > div > div > input {
-    background-color: #ffffff;
-    color: #000000;
-    border: 1px solid #ffffff !important;
-    border-radius: 4px;
-    padding: 8px 12px;
+.stChatInputContainer input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Adjust main content padding */
-.main {
-    padding-bottom: 20px !important;
+/* Style the send button */
+.stChatInputContainer button {
+    background-color: transparent !important;
+    color: white !important;
+    border: none !important;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.stSelectbox [data-baseweb="select"] {
+    background-color: transparent;
+    border-radius: 20px;
+}
+
+textarea {
+    background-color: #000000;
+    height: 50px;
+    bottom: 20px;
+    color: white;
+}
+
+div[data-testid="stChatInput"] {
+    border-radius: 50px;
+    bottom: 0.6cm;
+    position: fixed;
+    left: -700;
+    right: -50;
+    padding: 0 20px;
+}
+
+
+div[data-testid="stChatInput"] {
+    border-radius: 50px;
+    background-color: rgba(25, 25, 25, 0.746);
+}
+
+div[data-testid="stChatInputTextArea"] {
+    background-color: #000000;
+    margin-left: 0.3cm;
+}
+
+div[data-baseweb="textarea"] {
+    border-color: transparent;
+    border-radius: 50px;
+}
+
+/* New rule to adjust button position */
+div[data-testid="stChatInput"] button {
+    position: absolute;
+    border-radius: 100px;
+    right: calc(0cm + 20px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+div[class="st-emotion-cache-ugv6an e1se5lgy2 st-c7 st-c8 st-c9 st-ca st-cb st-am st-an st-ao st-ap st-cc st-cd st-ce st-cf st-cg st-ch st-ci st-cj st-ck st-cl st-cm st-cn"] button svg {
+    border-top-color: white; /* Barbie pink */
+}
+
+/* Ensure the chat messages don't get hidden behind the input */
+.stChatMessageContent {
+    margin-bottom: calc(60px + 1cm);
+    background-color: #000000;
 }
 
 /* Light Theme */
@@ -309,13 +306,59 @@ header {
     }
 
     .stApp {
-        background-color: white;
+        background-color: #ffffff;
+    }
+
+    .st-emotion-cache-qdbtli {
+        background-color: #ffffff;
+    }
+
+    /* Grid SVG */
+    .fixed-grid svg path {
+        stroke: #000000;
     }
 
     /* Header Styles */
     .header-content h1 {
         color: #000000;
         text-shadow: none;
+        position: relative;
+        z-index: 1;
+    }
+
+    .header-content h1::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: 
+            linear-gradient(45deg, rgba(254, 251, 199, 0.443) 25%, transparent 25%),
+            linear-gradient(-45deg, rgba(255, 192, 203, 0.2) 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, rgba(255, 253, 208, 0.2) 75%),
+            linear-gradient(-45deg, transparent 75%, rgba(255, 192, 219, 0.755) 75%);
+        background-size: 4px 4px;
+        background-color: rgba(255, 255, 255, 0.05);
+        filter: blur(3px);
+        border-radius: 10px;
+        z-index: -1;
+        animation: glowPulse 3s infinite alternate;
+    }
+
+    @keyframes glowPulse {
+        0% {
+            box-shadow: 
+                0 0 5px rgba(255, 253, 208, 0.4), 
+                0 0 10px rgba(255, 253, 208, 0.2), 
+                0 0 15px rgba(255, 192, 203, 0.3);
+        }
+        100% {
+            box-shadow: 
+                0 0 10px rgba(255, 253, 208, 0.4), 
+                0 0 20px rgba(255, 253, 208, 0.3), 
+                0 0 30px rgba(255, 192, 203, 0.4);
+        }
     }
 
     /* Chat Area Styles */
@@ -324,58 +367,29 @@ header {
         color: #000000;
     }
 
+    div[data-testid="stChatInput"] {
+        border-radius: 50px;
+        background-color: rgba(237, 237, 237, 0.964);
+    }
+
     .stChatMessage[data-testid="user-message"] {
-        background-color: #e5e5e5 !important;
+        background-color: #e0e0e0 !important;
         color: #000000;
-        border: 1px solid #cccccc !important;
+        border: 1px solid #000000 !important;
     }
 
     .stChatMessage[data-testid="assistant-message"] {
-        background-color: #ebebeb !important;
+        background-color: #f5f5f5 !important;
         color: #000000;
+    }
+
+    .stChatMessage .message {
+        color: #000000 !important;
     }
 
     .stChatMessage:hover {
         background-color: #d9d9d9 !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Input Area Styles */
-    .stChatInputContainer {
-        border: 1px solid #cccccc;
-    }
-
-    .stChatInput {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #cccccc !important;
-    }
-
-    .stChatInput::placeholder {
-        color: #777777;
-    }
-
-    .stChatInput:focus {
-        box-shadow: 0 0 10px #1DA1F2;
-    }
-
-    /* Button Styles */
-    .stButton>button {
-        background-color: #1DA1F2;
-        color: #ffffff;
-    }
-
-    /* Custom scrollbar */
-    ::-webkit-scrollbar-track {
-        background: #eeeeee;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #aaaaaa;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(149, 149, 149, 0.632);
     }
 
     /* Title Styles */
@@ -384,100 +398,741 @@ header {
         text-shadow: none;
     }
 
-    /* Grid SVG */
-    .fixed-grid svg path {
-        stroke: #000000;
+    /* Chat Input Styling */
+    .stChatInputContainer {
+        background-color: #ffffff !important;
+        border: 1px solid rgba(0, 0, 0, 0.2) !important;
     }
 
-    /* Streamlit elements */
-    .stTextInput > div > div > input {
+    .stChatInputContainer input {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        caret-color: #000000 !important; /* This makes the cursor black */
+    }
+
+    .stChatInputContainer input::placeholder {
+        color: rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .stChatInputContainer button {
+        color: #000000 !important;
+    }
+
+    /* Ensure black cursor for textarea as well */
+    textarea {
+        caret-color: #000000 !important;
+    }
+
+    /* Avatar Styles */
+    .stChatMessage .stAvatar img {
+        filter: none; /* Ensures avatar images look natural in the light theme */
+    }
+
+    /* Image Styles */
+    .stImage>img {
+        border-radius: 18px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        height: auto;
+    }
+
+    /* Ensure black text for all elements */
+    * {
+        color: #000000 !important;
+    }
+
+    /* Ensure chat messages have a white background */
+    .stChatMessageContent {
         background-color: #ffffff;
-        color: black;
-        border: 1px solid #cccccc;
     }
 
-    .stChatMessage {
-        background-color: #f0f0f0 !important;
+    /* Adjust text color for better contrast */
+    .stChatMessage .message strong {
+        color: #0056b3;
+    }
+
+    /* Make spinner white in dark theme */
+    .stSpinner > div {
+        border-color: white transparent white transparent !important;
+    }
+
+    /* Make spinner barbie pink in light theme */
+    .stSpinner > div {
+        border-color: #6971ff transparent #FF69B4 transparent !important;
+    }
+
+    /* Ensure the spinner is visible against any background */
+    .stSpinner {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Make Header Transparent */
+    .header-container {
+        background-color: transparent !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    /* Make Sidebar (Selection Panel) Transparent */
+    [data-testid="stSidebar"] {
+        background-color: transparent !important;
+        border-right: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    [class="st-ae st-af st-ag st-ah st-ai st-aj st-b6 st-ca st-cq st-bp st-cc st-bv st-bw st-bx st-by st-bz st-bt st-c0 st-c1 st-c2 st-cd st-c3 st-c4 st-c5 st-c6 st-c7"] {
+        background-color: transparent !important;
+        border-color: white !important;
+        padding: 15px;
+    }
+
+    /* Optional: Adjust Sidebar Content for Better Visibility */
+    [data-testid="stSidebar"] .sidebar-content {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    /* Optional: Ensure Header Text Remains Visible */
+    .header-content h1 {
+        color: #000000 !important; /* Black text for visibility on transparent background */
+        text-shadow: none !important;
     }
 }
 
-/* Position the chat input at the bottom and center it */
-.stChatFloatingInputContainer {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    background-color: #0e1117 !important;
-    padding: 1rem !important;
-    z-index: 1000 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-}
 
-/* Style the input field itself */
-.stChatInput {
-    width: 80% !important;
-    max-width: 800px !important;
-}
-
-/* Center the text in the input field */
-.stChatInput input {
-    text-align: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding-right: 40px !important; /* Make room for the send button */
-}
-
-/* Adjust the send button position */
-.stChatInput button {
-    position: absolute !important;
-    right: 5px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-}
-
-/* Add padding to the main content area */
-.main {
-    padding-bottom: 100px !important;
-}
-
-/* Ensure the chat messages don't get hidden behind the input */
-.stChatMessageContent {
-    margin-bottom: 60px;
-}
-
-/* Responsive design for smaller screens */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .stChatInput {
-        width: 90% !important;
+    body, .stApp {
+        font-size: 16px;
     }
-    
+
+    .header-container {
+        background-color: transparent
+    }
+
+    .header-content h1 {
+        font-size: 28px;
+    }
+
+    .fixed-grid svg path {
+        stroke: #a5a5a5;
+    }
+
+    .avatar-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .stImage>img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+    }
+
     .stChatFloatingInputContainer {
-        padding: 0.5rem !important;
+        padding: 10px;
+        bottom: 10px;
     }
-    
-    .stChatInput input {
-        font-size: 14px !important;
-        left: 50%;
-        padding: 8px 40px 8px 8px !important;
+
+    .stChatInputContainer {
+        padding: 8px 12px;
+        border-radius: 20px;
     }
-    
-    .stChatInput button {
-        padding: 4px 8px !important;
-        font-size: 12px !important;
+
+    .stChatInputContainer input {
+        font-size: 14px;
     }
 
     .stChatMessage {
-        max-width: 90%;
+        max-width: 90%; /* Increased from 75% to 90% */
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 15px;
+    }
+
+    /* Ensure user messages align to the right */
+    .stChatMessage[data-testid="user-message"] {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    /* Ensure assistant messages align to the left */
+    .stChatMessage[data-testid="assistant-message"] {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    .stChatMessageContent {
+        margin-bottom: 70px;
     }
 }
 
-/* Chat input styles */
-.stChatInputContainer {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
+/* Light theme adjustments */
+@media (max-width: 768px) and (prefers-color-scheme: light) {
+    body, .stApp {
+        background-color: #ffffff;
+        color: #000000;
+    }
+
+    .stChatInputContainer {
+        background-color: #f0f0f0;
+        border: 1px solid #e0e0e0;
+    }
+
+    .stChatMessage {
+        background-color: #f5f5f5;
+    }
 }
 
+/* Dark theme adjustments */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    body, .stApp {
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    .stChatInputContainer {
+        background-color: #1a1a1a;
+        border: 1px solid #333333;
+    }
+
+    .stChatMessage {
+        background-color: #1a1a1a;
+    }
+}
+
+/* Remove Streamlit elements */
+#MainMenu, footer, header {
+    visibility: hidden;
+}
+
+/* Adjust the main content to account for the fixed header */
+.main-content {
+    margin-top: 80px; /* Adjust this value based on your header height */
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 1200px; /* Match the header max-width */
+    margin-left: auto;
+    margin-right: auto;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Sidebar adjustments */
+.css-1544g2n.e1fqkh3o4 {
+    z-index: 1000; /* Ensure it's below the header */
+}
+
+@media (max-width: 768px) {
+    .header-content h1 {
+        font-size: 24px;
+    }
+}
+
+/* Sidebar Styles with Animation */
+[data-testid="stSidebar"] {
+    width: 100% !important;
+    height: auto !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    transform: translateY(-100%);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 999999;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] {
+    transform: translateY(0);
+}
+
+/* Animate sidebar content */
+[data-testid="stSidebar"] > div {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition-delay: 0.2s;
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] > div {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger the animation of sidebar content items */
+[data-testid="stSidebar"] .sidebar-content > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] .sidebar-content > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(1) { transition-delay: 0.3s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(2) { transition-delay: 0.4s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(3) { transition-delay: 0.5s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(4) { transition-delay: 0.6s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(5) { transition-delay: 0.7s; }
+
+/* Sidebar toggle button animation */
+.sidebar-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 999999;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    transform: scale(1.1);
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] ~ .sidebar-toggle {
+    opacity: 0.5;
+}
+
+/* Adjust main content to account for top-down sidebar */
+.main .block-container {
+    padding-top: 70px;
+    transition: padding-top 0.5s ease;
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] ~ .main .block-container {
+    padding-top: calc(70px + 20px);
+}
+
+/* Style sidebar content */
+[data-testid="stSidebar"] .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+[data-testid="stSidebar"] .sidebar-content > * {
+    margin-bottom: 15px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] .sidebar-content > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger the animation of sidebar content items */
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(1) { transition-delay: 0.1s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(2) { transition-delay: 0.2s; }
+[data-testid="stSidebar"] .sidebar-content > *:nth-child(3) { transition-delay: 0.3s; }
+/* Add more if needed */
+
+/* Smartphone-specific styles */
+@media screen and (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        height: 100vh !important;
+        padding-top: 60px; /* Adjust based on your header height */
+    }
+
+    [data-testid="stSidebar"][aria-expanded="true"] {
+        overflow-y: auto;
+    }
+
+    .sidebar-toggle {
+        top: 15px;
+        right: 15px;
+    }
+
+    [data-testid="stSidebar"] .sidebar-content {
+        height: 100%;
+        justify-content: flex-start;
+        padding-bottom: 60px; /* Add some bottom padding for scrolling */
+    }
+}
+
+/* Light theme adjustments */
+@media (prefers-color-scheme: light) {
+    [data-testid="stSidebar"] {
+        background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .sidebar-toggle {
+        color: #000000;
+    }
+}
+
+/* Light Theme Sidebar Enhancements */
+@media (prefers-color-scheme: light) {
+    /* Sidebar Container */
+    [data-testid="stSidebar"] {
+        background-color: #f5f5f5 !important; /* Light gray background */
+        border-right: 1px solid #dcdcdc; /* Subtle border */
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+        padding: 20px; /* Increased padding for better spacing */
+    }
+
+    /* Sidebar Content */
+    [data-testid="stSidebar"] .sidebar-content {
+        color: #333333; /* Darker text for readability */
+        font-family: 'Montserrat', sans-serif; /* Consistent font */
+    }
+
+    /* Sidebar Headings */
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4 {
+        color: #1a73e8; /* Distinctive heading color */
+        margin-bottom: 10px;
+    }
+
+    /* Sidebar Links */
+    [data-testid="stSidebar"] a {
+        color: #1a73e8; /* Primary link color */
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    [data-testid="stSidebar"] a:hover {
+        color: #004ba0; /* Darker shade on hover */
+        text-decoration: underline;
+    }
+
+    /* Sidebar Buttons */
+    [data-testid="stSidebar"] button {
+        background-color: #ffffff;
+        color: #1a73e8;
+        border: 1px solid #1a73e8;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 10px;
+    }
+
+    [data-testid="stSidebar"] button:hover {
+        background-color: #1a73e8;
+        color: #ffffff;
+    }
+
+    /* Sidebar Input Fields */
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] textarea {
+        background-color: #ffffff;
+        border: 1px solid #cccccc;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: #333333;
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    [data-testid="stSidebar"] input::placeholder,
+    [data-testid="stSidebar"] textarea::placeholder {
+        color: #999999;
+    }
+
+    /* Sidebar Select Boxes */
+    [data-testid="stSidebar"] select {
+        background-color: #ffffff;
+        border: 1px solid #cccccc;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: #333333;
+        font-size: 16px;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    /* Sidebar Checkboxes and Radio Buttons */
+    [data-testid="stSidebar"] .stCheckbox label,
+    [data-testid="stSidebar"] .stRadio label {
+        color: #333333;
+        font-size: 16px;
+    }
+
+    [data-testid="stSidebar"] .stCheckbox input:checked + label::before,
+    [data-testid="stSidebar"] .stRadio input:checked + label::before {
+        background-color: #1a73e8;
+        border-color: #1a73e8;
+    }
+
+    /* Sidebar Avatar Styles */
+    [data-testid="stSidebar"] .stAvatar img {
+        border: 2px solid #1a73e8;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        margin-bottom: 20px;
+    }
+
+    /* Sidebar Divider */
+    [data-testid="stSidebar"] .sidebar-divider {
+        border-bottom: 1px solid #dcdcdc;
+        margin: 20px 0;
+    }
+
+    /* Sidebar Icons */
+    [data-testid="stSidebar"] .sidebar-icon {
+        color: #1a73e8;
+        margin-right: 10px;
+        transition: color 0.3s ease;
+    }
+
+    [data-testid="stSidebar"] .sidebar-icon:hover {
+        color: #004ba0;
+    }
+
+    /* Sidebar Footer */
+    [data-testid="stSidebar"] .sidebar-footer {
+        position: absolute;
+        bottom: 20px;
+        width: calc(100% - 40px);
+        text-align: center;
+        color: #666666;
+        font-size: 14px;
+    }
+}
+
+/* Genesis Header Styles */
+.header-title.genesis {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    color: #181818; /* Slightly lighter than the background */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    background-color: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-title.genesis::before {
+    content: "GENESIS"; /* Duplicate content for stroke effect */
+    position: absolute;
+    color: transparent;
+    -webkit-text-stroke: 0.5px #ffffff; /* Thinner white stroke */
+    animation: strokeGlitch 2.5s infinite steps(1);
+}
+
+@keyframes strokeGlitch {
+    0%, 100% {
+        opacity: 1;
+    }
+    92.5% {
+        opacity: 0.8;
+        transform: translate(-2px, 2px);
+    }
+    95% {
+        opacity: 0.5;
+        transform: translate(2px, -2px);
+    }
+    97.5% {
+        opacity: 0.8;
+        transform: translate(-2px, -2px);
+    }
+}
+
+/* Make Header Transparent */
+.stApp > header {
+    background-color: transparent !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Ensure header content remains visible */
+.stApp > header .stToolbar {
+    background-color: transparent !important;
+}
+
+/* Adjust header elements for better visibility */
+.stApp > header button, 
+.stApp > header [data-testid="stToolbarMenuButton"] {
+    color: inherit !important;
+}
+
+/* Light theme adjustments */
+@media (prefers-color-scheme: light) {
+    .stApp > header {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    .stApp > header {
+        background-color: rgba(0, 0, 0, 0.3) !important;
+    }
+}
+
+/* Hover effects for header buttons */
+.stApp > header button:hover,
+.stApp > header [data-testid="stToolbarMenuButton"]:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Model explanation box */
+.model-explanation {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    font-size: 14px;
+    text-align: center;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+    .model-explanation {
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+    }
+}
+
+/* Model Card Styles */
+.model-card {
+    background-color: #121212;
+    border-radius: 12px;
+    padding: 20px;
+    color: #ffffff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.model-card:hover {
+    transform: translateY(-8px) rotateX(3deg) rotateY(3deg);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+
+.model-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #26D0CE, #1A2980);
+    backdrop-filter: blur(60px);
+    background-size: cover;
+    background-blend-mode: soft-light;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.model-card:hover::before {
+    opacity: 0.9;
+}
+
+.model-name {
+    font-size: 20px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    position: relative;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.model-card:hover .model-name {
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+.model-description {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #f0f0f0;
+    position: relative;
+}
+
+.model-description p {
+    margin: 5px 0;
+}
+
+.model-meta {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    font-size: 12px;
+    color: #d0d0d0;
+    position: relative;
+}
+
+/* Light Theme Styles */
+@media (prefers-color-scheme: light) {
+    .model-card {
+        background-color: #ffffff;
+        color: #333333;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .model-card:hover {
+        box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    }
+
+    .model-card::before {
+        background: linear-gradient(135deg, #F5E18D, #00A1E7, #191970);
+    }
+
+    div[model-card]::before {
+        -webkit-text-fill-color: white;
+    }
+
+    .model-name {
+        color: #333333;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .model-description {
+        color: #555555;
+    }
+
+    .model-meta {
+        border-top: 1px solid rgba(0,0,0,0.1);
+        color: #777777;
+    }
+
+    /* New styles for hover effect in light theme */
+    .model-card:hover .model-name,
+    .model-card:hover .model-description,
+    .model-card:hover .model-meta {
+        color: #ffffff;
+    }
+
+    .model-card:hover .model-name {
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    }
+}

@@ -1,50 +1,64 @@
-import asyncio
-import edge_tts
-from pydub import AudioSegment
-import tempfile
+import logging
+from deepgram import DeepgramClient, SpeakOptions
+import streamlit as st
 import os
-import pygame
+import tempfile
+import base64
 
-async def say_async(text, voice="en-US-GuyNeural"):
-    """
-    Convert text to speech asynchronously and play it.
-    
-    Args:
-    text (str): The text to be converted to speech.
-    voice (str): The voice to use (default is a male US English voice).
-    """
+def text_to_speech_deepgram(text: str):
+    API_KEY = "3956c457b60662f248076b00820080a8b72b1fbf"
+
     try:
-        # Create a communicate object
-        communicate = edge_tts.Communicate(text, voice)
-        
-        # Create a temporary file to store the audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
-            temp_filename = temp_audio.name
-        
-        # Save audio to the temporary file
-        await communicate.save(temp_filename)
-        
-        # Initialize pygame mixer
-        pygame.mixer.init()
-        
-        # Load the audio file
-        pygame.mixer.music.load(temp_filename)
-        
-        # Play the audio
-        pygame.mixer.music.play()
+        client = DeepgramClient(api_key=API_KEY)
+        options = SpeakOptions(
+            model="aura-stella-en",
+            encoding="linear16",
+            container="wav",
+            sample_rate=48000
+        )
 
-        # Wait until playback is finished
-        while pygame.mixer.music.get_busy():
-            await asyncio.sleep(0.1)
+        SPEAK_OPTIONS = {"text": text}
 
-        # Remove the temporary file
-        os.unlink(temp_filename)
+        # Use a temporary file to store the audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+            temp_filename = temp_file.name
+            response = client.speak.v("1").save(temp_filename, SPEAK_OPTIONS, options)
+        
+        logging.info(f"Successfully generated speech and saved to temporary file")
+        return temp_filename  # Return the temporary file path
         
     except Exception as e:
-        print(f"An error occurred during text-to-speech conversion: {str(e)}")
+        logging.error(f"Failed to convert text to speech using Deepgram: {e}")
+        return None
 
-def say(text, voice="en-US-SteffanNeural"):
-    """
-    Wrapper function to call the asynchronous say_async function.
-    """
-    asyncio.run(say_async(text, voice))
+def say(text: str):
+    audio_file = text_to_speech_deepgram(text)
+    
+    if audio_file and os.path.exists(audio_file):
+        try:
+            # Read the audio file as binary data
+            with open(audio_file, "rb") as file:
+                audio_bytes = file.read()
+            
+            # Encode the audio bytes to base64
+            audio_base64 = base64.b64encode(audio_bytes).decode()
+            
+            # Create an HTML audio element with autoplay
+            audio_html = f'''
+                <audio autoplay="true">
+                    <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+            '''
+            
+            # Display the audio using HTML
+            st.markdown(audio_html, unsafe_allow_html=True)
+            
+            logging.info(f"Successfully streamed audio from temporary file")
+            
+            # Clean up the temporary file
+            os.unlink(audio_file)
+        except Exception as e:
+            logging.error(f"Failed to stream audio: {e}")
+    else:
+        logging.error("No audio file generated to stream")
